@@ -16,8 +16,18 @@ import com.carpetwash.app.data.Worker
 fun WorkersScreen(onBack: () -> Unit) {
     val workers = remember { mutableStateListOf(Worker(1, "عامل تجريبي", "0910000000", "W-001")) }
     var showAdd by remember { mutableStateOf(false) }
-    Scaffold(topBar = { TopAppBar(title = { Text("العمال") }, navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "رجوع") } }, actions = { IconButton { showAdd = true } { Icon(Icons.Default.Add, "إضافة") } }) }) { pad ->
-        LazyColumn(Modifier.padding(pad).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) { items(workers) { worker -> Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp)) { Text(worker.name, style = MaterialTheme.typography.titleMedium); Text("الكود: ${worker.code} | الهاتف: ${worker.phone}"); Text(if (worker.active) "نشط" else "غير نشط") } } } }
+    Scaffold(topBar = { TopAppBar(title = { Text("العمال") }, navigationIcon = { IconButton(onBack) { Icon(Icons.Default.ArrowBack, "رجوع") } }, actions = { IconButton({ showAdd = true }) { Icon(Icons.Default.Add, "إضافة") } }) }) { pad ->
+        LazyColumn(Modifier.padding(pad).padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(workers) { worker ->
+                Card(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp)) { Text(worker.name, style = MaterialTheme.typography.titleMedium); Text("الكود: ${worker.code}"); Text("الهاتف: ${worker.phone}"); Text(if (worker.active) "الحالة: نشط" else "الحالة: غير نشط") } }
+            }
+        }
     }
-    if (showAdd) AlertDialog(onDismissRequest = { showAdd = false }, title = { Text("إضافة عامل") }, text = { Text("سيتم ربط الإضافة بقاعدة البيانات في المرحلة التالية.") }, confirmButton = { Button({ showAdd = false }) { Text("حسنًا") } })
+    if (showAdd) AddWorkerDialog(onDismiss = { showAdd = false }, onSave = { name, phone -> workers.add(Worker(workers.size + 1, name, phone, "W-${(workers.size + 1).toString().padStart(3, '0')}")); showAdd = false })
+}
+
+@Composable
+private fun AddWorkerDialog(onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
+    var name by remember { mutableStateOf("") }; var phone by remember { mutableStateOf("") }
+    AlertDialog(onDismissRequest = onDismiss, title = { Text("إضافة عامل") }, text = { Column { OutlinedTextField(name, { name = it }, label = { Text("اسم العامل") }, singleLine = true); OutlinedTextField(phone, { phone = it }, label = { Text("رقم الهاتف") }, singleLine = true, modifier = Modifier.padding(top = 8.dp)) } }, confirmButton = { Button(onClick = { if (name.isNotBlank()) onSave(name, phone) }, enabled = name.isNotBlank()) { Text("حفظ") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("إلغاء") } })
 }
